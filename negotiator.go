@@ -60,7 +60,13 @@ func (l Negotiator) RoundTrip(req *http.Request) (res *http.Response, err error)
 		return res, err
 	}
 
-	resauth := authheader(res.Header.Get("Www-Authenticate"))
+	var resauth authheader
+	for _, v := range res.Header["Www-Authenticate"] {
+		resauth = authheader(v)
+		if resauth.IsNTLM() {
+			break
+		}
+	}
 	if !resauth.IsNegotiate() && !resauth.IsNTLM() {
 		// Unauthorized, Negotiate not requested, let's try with basic auth
 		req.Header.Set("Authorization", string(reqauth))
